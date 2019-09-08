@@ -1,0 +1,9 @@
+[package]
+name = "diagonals"
+version = "0.1.0"
+authors = ["Matthew Planchard <msplanchard@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+
+fraction = "~0.6.2"
