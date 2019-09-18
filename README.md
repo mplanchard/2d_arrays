@@ -6,7 +6,7 @@ Solutions to the 2D array problem
 
 All of the solutions here make use of a correspondence between the 2D
 array and the x-y coordinate system to collect the points in the array
-into a hash map, keyed by their x-intercept values.
+into a hash map, keyed by their y-intercept values.
 
 This is a nice solution, because it's relatively easy to convert the
 2D array into a 2D array of coordinate points. If we imagine a 2D
