@@ -120,26 +120,22 @@ def to_point_on_line_with_slope(
 # ######################################################################
 
 
-def points_by_x_intercept(
+def points_by_intercept(
     accumulator: t.Dict[float, t.List[Point]],
     point_on_line: PointOnLineWithSlope,
 ) -> t.Dict[float, t.List[Point]]:
     """Accumulate a Point into a dictionary, keyed by its x-intercept."""
-    x_intercept = point_on_line.x_intercept
+    y_intercept = point_on_line.y_intercept
     return {
         **accumulator,
-        x_intercept: (
-            [*accumulator.get(x_intercept, ()), point_on_line.point]
-            if point_on_line.slope < 0
-            else [point_on_line.point, *accumulator.get(x_intercept, ())]
-        ),
+        y_intercept: [*accumulator.get(y_intercept, ()), point_on_line.point],
     }
 
 
 def array_to_points(
     slope: float, array: t.List[t.List[t.Any]]
 ) -> t.Dict[float, t.List[Point]]:
-    """Convert a 2D array to a dictionary of points, keyed by x-intercept."""
+    """Convert a 2D array to a dictionary of points, keyed by y-intercept."""
     array_len = len(array)
 
     # Convert the 2D array of values to a 2D array of points
@@ -156,7 +152,6 @@ def array_to_points(
             ),
             range(len(array[row_idx])),
         ),
-        # range(start, stop, step),
         range(array_len),
     )
 
@@ -171,8 +166,8 @@ def array_to_points(
     # Convert the Points to PointOnLineWithSlope instances
     points_on_line = map(to_point_on_line, flattened)
 
-    # Accumulate them into a dict keyed by x-intercept
-    return reduce(points_by_x_intercept, points_on_line, {})
+    # Accumulate them into a dict keyed by y-intercept
+    return reduce(points_by_intercept, points_on_line, {})
 
 
 def print_diagonals(slope: int, array: t.List[t.List[t.Any]]) -> None:
@@ -181,12 +176,20 @@ def print_diagonals(slope: int, array: t.List[t.List[t.Any]]) -> None:
 
     printer = partial(print, sep=" ")
 
+    # These two lines are code are all that we need to properly support
+    # slopes of any value
+    intercept_sorter = sorted if slope < 0 else partial(sorted, reverse=True)
+    value_reverser = identity if slope < 0 else reversed
+
     print(f"Diagonals with slope {slope} for {array}:")
     for_each(
-        lambda x_intercept: printer(
-            *map(lambda p: p.value, points[x_intercept])
+        lambda intercept: printer(
+            *map(
+                lambda p: p.value,
+                value_reverser(points[intercept]),  # type: ignore
+            )
         ),
-        sorted(points),
+        intercept_sorter(points),  # type: ignore
     )
     print()
 
@@ -240,11 +243,11 @@ def main():
     print("Slope: -1")
     for_each(lambda arr: print_diagonals(-1, arr), test_arrays)
 
-    print("Slope: -2")
-    for_each(lambda arr: print_diagonals(-2, arr), test_arrays)
-
     print("Slope: 1")
     for_each(lambda arr: print_diagonals(1, arr), test_arrays)
+
+    print("Slope: -2")
+    for_each(lambda arr: print_diagonals(-2, arr), test_arrays)
 
     print("Slope: 2")
     for_each(lambda arr: print_diagonals(2, arr), test_arrays)

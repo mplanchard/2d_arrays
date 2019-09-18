@@ -33,14 +33,12 @@ class PointOnLineWithSlope {
 
 
 
-const points_by_x_intercept = (accumulator, point_on_line) => {
-    const x_intercept = point_on_line.x_intercept();
+const points_by_y_intercept = (accumulator, point_on_line) => {
+    const y_intercept = point_on_line.y_intercept();
     return {
         ...accumulator,
-        [x_intercept]: (
-            (point_on_line.slope < 0) ?
-            [...accumulator[x_intercept] || [], point_on_line.point] :
-            [point_on_line.point, ...accumulator[x_intercept] || []]
+        [y_intercept]: (
+            [...accumulator[y_intercept] || [], point_on_line.point]
         )
     };
 }
@@ -58,18 +56,23 @@ const array_to_points = (slope, array) => {
     ).map(
         (point) => new PointOnLineWithSlope(point, slope)
     ).reduce(
-        points_by_x_intercept, {}
+        points_by_y_intercept, {}
     );
 }
 
 const print_diagonals = (slope, array) => {
     const points = array_to_points(slope, array);
 
+    const sorter = (slope < 1) ? undefined : (first, second) => second - first;
+    const reverser = (slope < 1) ? (x) => x : (x) => x.reverse()
+
     console.log(`Diagonals with slope ${slope} for`, array);
-    Object.keys(points).sort().forEach((
-        (x_intercept) => {
+    Object.keys(points).sort(sorter).forEach((
+        (y_intercept) => {
             console.log(
-                points[x_intercept].map((point) => `${point.value}`).join(" ")
+                reverser(
+                    points[y_intercept]
+                ).map((point) => `${point.value}`).join(" ")
             );
         }
     ));
@@ -112,4 +115,8 @@ const test_arrays = [
     ],
 ];
 
-test_arrays.forEach((arr) => print_diagonals(-1, arr));
+[-1, 1, -2, 2].forEach(
+    (slope) => test_arrays.forEach(
+        (arr) => print_diagonals(slope, arr)
+    )
+)

@@ -72,7 +72,7 @@ fn points_to_mapped_points<'a, T: Debug>(
         .iter()
         .map(|point| PointOnLineWithSlope::with_slope_from_point(slope, point));
     points_on_line.fold(HashMap::new(), |mut acc, point_on_line| {
-        acc.entry(point_on_line.x_intercept())
+        acc.entry(point_on_line.y_intercept())
             .and_modify(|point_list| {
                 if slope < 0.into() {
                     point_list.push(point_on_line.point)
@@ -90,9 +90,22 @@ fn print_diagonals<T: Debug>(slope: Decimal, array: &Vec<Vec<T>>) {
     let mapped_points = points_to_mapped_points(slope, &points);
     let mut keys = mapped_points.keys().collect::<Vec<&Decimal>>();
     println!("Printing lines of slope {} for vec: {:?}", slope, array);
-    keys.sort_by(|prev, next| prev.partial_cmp(next).unwrap());
+
+    let negative_slope = slope < Decimal::from(0);
+
+    if negative_slope {
+        keys.sort_by(|prev, next| prev.partial_cmp(&next).unwrap())
+    } else {
+        keys.sort_by(|prev, next| next.partial_cmp(&prev).unwrap())
+    };
+
     keys.iter().for_each(|key| {
-        let points = mapped_points.get(key).unwrap();
+        let map_key_iter = mapped_points.get(key).unwrap().into_iter().map(|p| *p);
+        let points = if negative_slope {
+            map_key_iter.collect::<Vec<&Point<T>>>()
+        } else {
+            map_key_iter.rev().collect::<Vec<&Point<T>>>()
+        };
         points.iter().for_each(|point| {
             print!("{:?} ", point.value);
         });
@@ -129,23 +142,10 @@ fn main() {
         vec![vec![]],
     ];
 
-    // Print lines with a slope of -1
-    test_arrays.iter().for_each(|arr| {
-        print_diagonals(Decimal::from(-1), arr);
+    vec![-1, 1, -2, 2].iter().for_each(|slope| {
+        test_arrays.iter().for_each(|arr| {
+            print_diagonals(Decimal::from(*slope as i8), arr);
+        });
     });
 
-    // Print lines with a slope of -1
-    test_arrays.iter().for_each(|arr| {
-        print_diagonals(Decimal::from(-2), arr);
-    });
-
-    // Print lines with a slope of 1
-    test_arrays.iter().for_each(|arr| {
-        print_diagonals(Decimal::from(1), arr);
-    });
-
-    // Print lines with a slope of 2
-    test_arrays.iter().for_each(|arr| {
-        print_diagonals(Decimal::from(2), arr);
-    });
 }

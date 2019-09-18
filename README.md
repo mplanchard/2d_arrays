@@ -2,6 +2,8 @@
 
 Solutions to the 2D array problem
 
+## Algorithm
+
 All of the solutions here make use of a correspondence between the 2D
 array and hte x-y coordinate system to collect the points in the array
 into a hash map, keyed by their x-intercept values.
@@ -59,13 +61,13 @@ line MUST conform to the equation of the line, to accomplish our goal?
 
 It turns out we can! The trick is to recognize that since we want to print
 our lines going from left to right, we are also printing them in increasing
-order of x-intercept. In the case we're considering above, we would
-print the points on the line with its x-intercept at 0, then the line
-with its x-intercept at 1, then the line with its x-intercept at 2.
+order of y-intercept. In the case we're considering above, we would
+print the points on the line with its y-intercept at 0, then the line
+with its y-intercept at 1, then the line with its y-intercept at 2.
 
 This pattern applies _regardless of how many items are in the array_, and
 _regardless of how many items are in any given sub-array_. This means that
-if we can base out solution on the x-intercept, we can free ourselves from
+if we can base out solution on the intercept, we can free ourselves from
 complicated iteration patterns entirely.
 
 So, how do we do it? The first step is to convert the array to series of
@@ -126,42 +128,12 @@ leaves only _m_, the slope, and _b_, the y-intercept remaining in the
 canonical equation of a line, which means that if we have one, we can
 calculate the other.
 
-However, we're not interested specifically in the y-intercept. We would
-like the x-intercept. Let's call it _z_. We can get it as follows:
-
-```raw
-y = mx + b
-# the x-intercept is when y = 0
-0 = mz + b
-mz = -b
-z = -b/m
-
-# So, z is the negative y-intercept, divided by the slope. If we can get
-# rid of b, we can solve it for any point with just the x and y values
-# and the slope.
-
-# We know that b is:
-y = mx + b
-b = y - mx
-
-# Substituting, we get:
-z = -(y - mx)/m
-```
-
 Now, we're almost there! We could now write a function like
-`x_intercept(slope: float, point: Point) -> float`.
+`y_intercept(slope: float, point: Point) -> float`.
 
 With that function in hand, we can reduce our list of Points down to a
-hash map whose keys are x-intercepts, and whose values are lists of
+hash map whose keys are y-intercepts, and whose values are lists of
 Points.
-
-One important note is that the order in which we add our Points matters.
-If the slope is negative, we want the list for a given x-intercept to
-be in the same relative order as in the original 1D array, which is to
-say top to bottom. If the slope is positive, on the other hand, we would
-want to reverse the order in the resulting hash map, so that they are
-present from bottom to top. It is fairly trivial to do this branching
-within the reducer.
 
 Now, we've got a hash map that looks like this:
 
@@ -176,9 +148,17 @@ Now, we've got a hash map that looks like this:
 ```
 
 Where the points are only those points that lie on the line with the
-x-intercept specified by the key. This means we're basically done.
+y-intercept specified by the key. This means we're basically done.
 We can sort the keys of the hash map, and for each key, print the
 point values in order.
+
+What's superb here is that all we need to do to support any slope at all
+is to recognize that for _positive_ slopes we want to walk our y-intercepts
+in descending order, while for _negative_ slopes we walk in ascending
+order. So, we choose a sorting strategy appropriately. From there,
+because we mapped over the arrays from "top left" to "bottom right"
+when constructing our points, we can keep them in their order of insertion
+for negative slopes, or reverse them for positive slopes. Easy!
 
 What's particularly nice about this solution is that it's entirely
 resilient to most or all of the edge/corner cases that trip up most
@@ -190,6 +170,8 @@ magnitudes. Changing the -1 to a 1 gets us lines going from bottom left
 to top right, rather than top left to bottom right. It even has no
 trouble with slopes like 1/2.
 
+## Complexity
+
 How does it do on time complexity? To some degree, this depends on the
 language. In JavaScript, for example, where all array operations return
 new arrays, it involves a fairly large number of iterations over the
@@ -198,12 +180,14 @@ generators, it involves only one full loop over the members of the 2D
 array. The Rust solution is able to use a mix of generators and vectors,
 and is also quite fast. Once the hash map is generated, the keys must
 be sorted. The speed of that will depend on the sorting algorithm
-used by the language, but in any case, the maximum number of x-intercepts
+used by the language, but in any case, the maximum number of y-intercepts
 is _n_, where _n_ is the length of the subarray of a 2D array containing
-only one array. If we assume the worst case, the sorting of the array
-keys brings us to _O(n log n)_, but the average case will be much better
-than this, because the number of x-intercepts decreases proportionally
-relative to the total number of elements the longer the outer array is.
+only one array, or any number of sub-arrays whose lengths are all 1.
+If we assume this worst case, and the language does not maintain insertion
+order in hash maps, the sorting of the array keys brings us to _O(n log n)_,
+but the average case will be much better than this, because the number of
+y-intercepts decreases non-linearly relative to the total number of
+elements the longer the outer array is.
 
 Space complexity is also highly language-dependent. All languages require
 the construction of a Point for each element of the array, which will
